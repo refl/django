@@ -30,6 +30,7 @@ from django.middleware.csrf import CsrfViewMiddleware, get_token
 from django.test import Client, TestCase, override_settings
 from django.test.client import RedirectCycleError
 from django.urls import NoReverseMatch, reverse, reverse_lazy
+from django.utils.deprecation import RemovedInDjango40Warning
 from django.utils.http import urlsafe_base64_encode
 
 from .client import PasswordResetConfirmClient
@@ -62,7 +63,7 @@ class AuthViewsTestCase(TestCase):
         return response
 
     def logout(self):
-        response = self.client.get('/admin/logout/')
+        response = self.client.post('/admin/logout/')
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(SESSION_KEY, self.client.session)
 
@@ -951,7 +952,7 @@ class LogoutTest(AuthViewsTestCase):
     def test_logout_default(self):
         "Logout without next_page option renders the default template"
         self.login()
-        response = self.client.get('/logout/')
+        response = self.client.post('/logout/')
         self.assertContains(response, 'Logged out')
         self.confirm_logged_out()
 
@@ -961,10 +962,21 @@ class LogoutTest(AuthViewsTestCase):
         self.assertContains(response, 'Logged out')
         self.confirm_logged_out()
 
+    def test_logout_with_get_raises_deprecation_warning(self):
+        self.login()
+        with self.assertWarnsMessage(
+            RemovedInDjango40Warning,
+            "Logout via GET is deprecated and will be removed in Django 4.0. "
+            "Please use POST if you want to log out.",
+        ):
+            response = self.client.get('/logout/')
+        self.assertContains(response, 'Logged out')
+        self.confirm_logged_out()
+
     def test_14377(self):
         # Bug 14377
         self.login()
-        response = self.client.get('/logout/')
+        response = self.client.post('/logout/')
         self.assertIn('site', response.context)
 
     def test_logout_doesnt_cache(self):
@@ -972,7 +984,7 @@ class LogoutTest(AuthViewsTestCase):
         The logout() view should send "no-cache" headers for reasons described
         in #25490.
         """
-        response = self.client.get('/logout/')
+        response = self.client.post('/logout/')
         self.assertIn('no-store', response['Cache-Control'])
 
     def test_logout_with_overridden_redirect_url(self):
@@ -1100,19 +1112,19 @@ class LogoutTest(AuthViewsTestCase):
         self.login()
         self.client.post('/setlang/', {'language': 'pl'})
         self.assertEqual(self.client.cookies[settings.LANGUAGE_COOKIE_NAME].value, 'pl')
-        self.client.get('/logout/')
+        self.client.post('/logout/')
         self.assertEqual(self.client.cookies[settings.LANGUAGE_COOKIE_NAME].value, 'pl')
 
     @override_settings(LOGOUT_REDIRECT_URL='/custom/')
     def test_logout_redirect_url_setting(self):
         self.login()
-        response = self.client.get('/logout/')
+        response = self.client.post('/logout/')
         self.assertRedirects(response, '/custom/', fetch_redirect_response=False)
 
     @override_settings(LOGOUT_REDIRECT_URL='logout')
     def test_logout_redirect_url_named_setting(self):
         self.login()
-        response = self.client.get('/logout/')
+        response = self.client.post('/logout/')
         self.assertRedirects(response, '/logout/', fetch_redirect_response=False)
 
 

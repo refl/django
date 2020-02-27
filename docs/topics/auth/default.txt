@@ -1131,7 +1131,8 @@ implementation details see :ref:`using-the-views`.
 
 .. class:: LogoutView
 
-    Logs a user out.
+    Logs a user out on ``POST`` requests. Logging out on ``GET`` currently
+    still works, but is deprecated and will be removed in Django 4.0.
 
     **URL name:** ``logout``
 

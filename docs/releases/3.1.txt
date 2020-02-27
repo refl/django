@@ -496,6 +496,12 @@ Miscellaneous
 Features deprecated in 3.1
 ==========================
 
+Logout via GET
+--------------
+* Logging out via ``GET`` requests to the
+  :py:class:`built-in logout view <django.contrib.auth.views.LogoutView>` is
+  deprecated. Please update your code to use ``POST`` instead.
+
 Miscellaneous
 -------------
 

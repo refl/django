@@ -1,3 +1,4 @@
+import warnings
 from urllib.parse import urlparse, urlunparse
 
 from django.conf import settings
@@ -17,6 +18,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.shortcuts import resolve_url
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.deprecation import RemovedInDjango40Warning
 from django.utils.http import (
     url_has_allowed_host_and_scheme, urlsafe_base64_decode,
 )
@@ -122,9 +124,18 @@ class LogoutView(SuccessURLAllowedHostsMixin, TemplateView):
             return HttpResponseRedirect(next_page)
         return super().dispatch(request, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        # Deprecated in Django 3.1.
+        warnings.warn(
+            "Logout via GET is deprecated and will be removed in Django 4.0. "
+            "Please use POST if you want to log out.",
+            RemovedInDjango40Warning
+        )
+        return super().get(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         """Logout may be done via POST."""
-        return self.get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_next_page(self):
         if self.next_page is not None:
