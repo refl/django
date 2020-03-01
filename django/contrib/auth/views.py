@@ -125,7 +125,6 @@ class LogoutView(SuccessURLAllowedHostsMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        # Deprecated in Django 3.1.
         warnings.warn(
             "Logout via GET is deprecated and will be removed in Django 4.0. "
             "Please use POST if you want to log out.",
